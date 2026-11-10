@@ -134,11 +134,5 @@ Con el backend y `seed` listos, `bash backend/tests/e2e.sh [URL]` ejecuta casi t
 | Flujo ML | App (cliente) → **Predicción**: resultado del backend; y “Sugerir categoría con IA” al agregar un gasto. |
 | Transacciones desde la app | Agregar / listar / eliminar movimientos con normalidad. |
 
-Para el **video** (sin código): login cliente → agregar gasto con sugerencia IA → ver Predicción → cerrar sesión → login admin → estadísticas → promover usuario → login con ese usuario → contraseña incorrecta → (en paralelo, terminal con la prueba del dato inválido a la API).
 
----
-## 6. Limitaciones y notas honestas
-- El código del backend **se probó de punta a punta** contra una base MariaDB real (login, 403 a clientes, rechazo de `role`, validación, exclusión de registros inválidos, promoción, estadísticas y ML).
-- El código Flutter **no se pudo compilar en el entorno donde se generó** (no hay SDK de Flutter disponible ahí). Se revisó con cuidado, pero si al compilar aparece algún error o advertencia menor por la versión de Flutter, corre `flutter analyze` y corrígelo (suelen ser cambios de nombres en widgets). Avísame con el error y lo ajusto.
-- El APK de release se firma con la llave de depuración (instalable, pero no apto para Play Store).
-- `usesCleartextTraffic=true` permite HTTP para demos; con un backend HTTPS no hace falta.
+
