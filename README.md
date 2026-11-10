@@ -48,7 +48,7 @@ Los datos de prueba (≈7 000 transacciones, 6 meses + mes en curso) son **sint�
 
 ### Publicar el backend (para que el APK funcione en cualquier teléfono)
 Opciones gratuitas: **Render** (Web Service, root `backend`, build `npm install`, start `npm start`) + una BD MySQL en
-**Aiven**, **Railway** o **FreeSQLDatabase**. Define las variables de `.env` en el panel (usa `DB_SSL=true` si el proveedor lo exige) y ejecuta una vez
+**TiBD**, **Railway** o **FreeSQLDatabase**. Define las variables de `.env` en el panel (usa `DB_SSL=true` si el proveedor lo exige) y ejecuta una vez
 `npm run init-db && npm run seed` apuntando a esa BD (desde tu PC con el `.env` de producción).
 Alternativa para la demo: correr el backend en tu PC y exponerlo con `ngrok http 3000` o `cloudflared tunnel --url http://localhost:3000`.
 
