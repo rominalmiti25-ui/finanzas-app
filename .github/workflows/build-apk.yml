@@ -1,0 +1,41 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preparar proyecto Android
+        run: bash tool/prepare_android.sh
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Compilar APK (release)
+        # Define la variable API_URL en: Settings > Secrets and variables > Actions > Variables
+        run: flutter build apk --release --dart-define=API_URL=${{ vars.API_URL }}
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: finanzas-app-apk
+          path: frontend/build/app/outputs/flutter-apk/app-release.apk
