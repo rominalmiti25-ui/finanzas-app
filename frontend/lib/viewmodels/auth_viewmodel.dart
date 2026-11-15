@@ -1,17 +1,34 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_user.dart';
 import '../services/api_client.dart';
+import '../services/realtime_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final ApiClient api;
+  final RealtimeService rt;
+  StreamSubscription<RealtimeEvent>? _sub;
   AppUser? user;
   bool initialized = false;
   bool loading = false;
   String? error;
 
-  AuthViewModel(this.api) {
+  AuthViewModel(this.api, this.rt) {
     api.onUnauthorized = () { _clearSession(); notifyListeners(); };
+    // Tiempo real: si un admin me promueve, la app cambia sola al panel de administrador.
+    _sub = rt.events.listen((e) { if (e.name == 'role:changed') refreshUser(); });
+  }
+
+  @override
+  void dispose() { _sub?.cancel(); super.dispose(); }
+
+  Future<void> refreshUser() async {
+    try {
+      final res = await api.get('/api/auth/me');
+      user = AppUser.fromJson(res['user'] as Map<String, dynamic>);
+      notifyListeners();
+    } catch (_) {}
   }
 
   // ---------- Validaciones de entrada (VistaModelo) ----------
@@ -63,6 +80,7 @@ class AuthViewModel extends ChangeNotifier {
       try {
         final res = await api.get('/api/auth/me');
         user = AppUser.fromJson(res['user'] as Map<String, dynamic>);
+        rt.connect(t); // abre el canal de tiempo real
       } catch (_) {
         await _clearSession();
       }
@@ -86,6 +104,7 @@ class AuthViewModel extends ChangeNotifier {
       final res = await api.post(path, body);
       api.token = res['token'] as String;
       user = AppUser.fromJson(res['user'] as Map<String, dynamic>);
+      rt.connect(api.token!); // abre el canal de tiempo real
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', api.token!);
       return true;
@@ -99,6 +118,7 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> _clearSession() async {
     api.token = null; user = null;
+    rt.disconnect();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
   }

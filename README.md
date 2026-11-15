@@ -48,7 +48,7 @@ Los datos de prueba (≈7 000 transacciones, 6 meses + mes en curso) son **sint�
 
 ### Publicar el backend (para que el APK funcione en cualquier teléfono)
 Opciones gratuitas: **Render** (Web Service, root `backend`, build `npm install`, start `npm start`) + una BD MySQL en
-**TiBD**, **Railway** o **FreeSQLDatabase**. Define las variables de `.env` en el panel (usa `DB_SSL=true` si el proveedor lo exige) y ejecuta una vez
+**Aiven**, **Railway** o **FreeSQLDatabase**. Define las variables de `.env` en el panel (usa `DB_SSL=true` si el proveedor lo exige) y ejecuta una vez
 `npm run init-db && npm run seed` apuntando a esa BD (desde tu PC con el `.env` de producción).
 Alternativa para la demo: correr el backend en tu PC y exponerlo con `ngrok http 3000` o `cloudflared tunnel --url http://localhost:3000`.
 
@@ -134,5 +134,28 @@ Con el backend y `seed` listos, `bash backend/tests/e2e.sh [URL]` ejecuta casi t
 | Flujo ML | App (cliente) → **Predicción**: resultado del backend; y “Sugerir categoría con IA” al agregar un gasto. |
 | Transacciones desde la app | Agregar / listar / eliminar movimientos con normalidad. |
 
+Para el **video** (sin código): login cliente → agregar gasto con sugerencia IA → ver Predicción → cerrar sesión → login admin → estadísticas → promover usuario → login con ese usuario → contraseña incorrecta → (en paralelo, terminal con la prueba del dato inválido a la API).
 
+---
+## 6. Limitaciones y notas honestas
+- El código del backend **se probó de punta a punta** contra una base MariaDB real (login, 403 a clientes, rechazo de `role`, validación, exclusión de registros inválidos, promoción, estadísticas y ML).
+- El código Flutter **no se pudo compilar en el entorno donde se generó** (no hay SDK de Flutter disponible ahí). Se revisó con cuidado, pero si al compilar aparece algún error o advertencia menor por la versión de Flutter, corre `flutter analyze` y corrígelo (suelen ser cambios de nombres en widgets). Avísame con el error y lo ajusto.
+- El APK de release se firma con la llave de depuración (instalable, pero no apto para Play Store).
+- `usesCleartextTraffic=true` permite HTTP para demos; con un backend HTTPS no hace falta.
 
+---
+## 7. Tiempo real (Socket.IO)
+El backend abre un canal **WebSocket** (Socket.IO, mismo puerto que la API). La app se conecta con su token JWT al iniciar sesión y el servidor le "empuja" eventos, de modo que **no hace falta refrescar**.
+
+- **Conexión segura:** el token se valida al conectar y el rol se lee de la BD (sin token o con token falso → rechazada).
+- **Salas:** `user:<id>` (todos los dispositivos de un usuario) y `admins` (todos los administradores).
+
+| Evento | Quién lo recibe | Qué provoca en la app |
+|---|---|---|
+| `transaction:created / updated / deleted` | El propio cliente (en todos sus dispositivos) | Recarga sus movimientos, resumen y predicción |
+| `admin:activity` | Administradores | Aparece en “Actividad en vivo” y se refrescan estadísticas y usuarios |
+| `role:changed` | El usuario promovido | La app cambia sola al panel de administrador |
+| `ml:trained` | Todos | La predicción se recalcula |
+
+Prueba automática: `node tests/realtime_e2e.js [URL]` (con la API en marcha y el seed cargado).
+Nota de privacidad: el feed del administrador muestra nombre, tipo, monto y categoría; si no se desea mostrar montos, se quitan en `src/realtime/socket.js` (función `transactionChanged`).

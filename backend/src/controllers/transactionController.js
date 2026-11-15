@@ -1,5 +1,6 @@
 const TransactionModel = require('../models/transactionModel');
 const { transactionRowSchema } = require('../models/schemas');
+const realtime = require('../realtime/socket');
 
 // Verifica pertenencia: cambiar el id en la URL no permite ver/editar datos de otro cliente
 async function ownedOr(req, res) {
@@ -17,7 +18,9 @@ exports.list = async (req, res) => {
 exports.create = async (req, res) => {
   const id = await TransactionModel.create(req.user.id, req.body);
   const raw = await TransactionModel.getRaw(id);
-  res.status(201).json({ item: transactionRowSchema.parse(raw) });
+  const item = transactionRowSchema.parse(raw);
+  realtime.transactionChanged('created', req.user, item); // tiempo real
+  res.status(201).json({ item });
 };
 
 exports.getOne = async (req, res) => {
@@ -30,11 +33,14 @@ exports.getOne = async (req, res) => {
 exports.update = async (req, res) => {
   const raw = await ownedOr(req, res); if (!raw) return;
   await TransactionModel.update(req.params.id, req.user.id, req.body);
-  res.json({ item: transactionRowSchema.parse(await TransactionModel.getRaw(req.params.id)) });
+  const item = transactionRowSchema.parse(await TransactionModel.getRaw(req.params.id));
+  realtime.transactionChanged('updated', req.user, item);
+  res.json({ item });
 };
 
 exports.remove = async (req, res) => {
   const raw = await ownedOr(req, res); if (!raw) return;
   await TransactionModel.remove(req.params.id, req.user.id);
+  realtime.transactionChanged('deleted', req.user, raw);
   res.status(204).end();
 };

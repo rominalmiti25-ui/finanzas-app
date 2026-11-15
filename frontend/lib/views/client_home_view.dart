@@ -4,6 +4,7 @@ import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/prediction_viewmodel.dart';
 import '../viewmodels/transactions_viewmodel.dart';
 import 'add_transaction_view.dart';
+import 'widgets/common.dart';
 import 'prediction_tab.dart';
 import 'summary_tab.dart';
 import 'transactions_tab.dart';
@@ -39,6 +40,7 @@ class _ClientHomeViewState extends State<ClientHomeView> {
       appBar: AppBar(
         title: Text(titles[_index]),
         actions: [
+          const LiveBadge(),
           IconButton(tooltip: 'Cerrar sesión', icon: const Icon(Icons.logout), onPressed: () => context.read<AuthViewModel>().logout()),
         ],
       ),

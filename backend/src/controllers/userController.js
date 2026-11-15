@@ -1,4 +1,5 @@
 const UserModel = require('../models/userModel');
+const realtime = require('../realtime/socket');
 
 exports.list = async (req, res) => {
   const { valid } = await UserModel.listValid(); // usuarios inválidos se excluyen
@@ -11,5 +12,7 @@ exports.promote = async (req, res) => {
   if (user.invalid) return res.status(422).json({ error: 'El registro del usuario es inválido' });
   if (user.role === 'admin') return res.status(409).json({ error: 'El usuario ya es administrador' });
   await UserModel.promote(user.id);
-  res.json({ user: await UserModel.findById(user.id) });
+  const updated = await UserModel.findById(user.id);
+  realtime.userPromoted(updated); // tiempo real
+  res.json({ user: updated });
 };

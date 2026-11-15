@@ -1,10 +1,31 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/transaction_item.dart';
 import '../services/api_client.dart';
+import '../services/realtime_service.dart';
 
 class TransactionsViewModel extends ChangeNotifier {
   final ApiClient api;
-  TransactionsViewModel(this.api);
+  final RealtimeService rt;
+  StreamSubscription<RealtimeEvent>? _sub;
+  Timer? _debounce;
+
+  TransactionsViewModel(this.api, this.rt) {
+    // Tiempo real: si cambia un movimiento (desde este u otro dispositivo), se recarga la lista.
+    _sub = rt.events.listen((e) {
+      if (e.name.startsWith('transaction:')) {
+        _debounce?.cancel();
+        _debounce = Timer(const Duration(milliseconds: 400), () => load(silent: true));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    _debounce?.cancel();
+    super.dispose();
+  }
 
   List<TransactionItem> items = [];
   bool loading = false;
@@ -34,14 +55,15 @@ class TransactionsViewModel extends ChangeNotifier {
   }
 
   // ---------- Operaciones ----------
-  Future<void> load({bool reset = false}) async {
+  /// [silent] = recarga en segundo plano (tiempo real): sin spinner y sin mostrar errores.
+  Future<void> load({bool reset = false, bool silent = false}) async {
     if (reset) items = [];
-    loading = true; error = null; notifyListeners();
+    if (!silent) { loading = true; error = null; notifyListeners(); }
     try {
       final res = await api.get('/api/transactions', query: {'limit': '500'});
       items = (res['items'] as List).map((e) => TransactionItem.fromJson(e as Map<String, dynamic>)).toList();
     } on ApiException catch (e) {
-      error = e.toString();
+      if (!silent) error = e.toString();
     } finally {
       loading = false; notifyListeners();
     }

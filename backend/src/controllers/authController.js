@@ -2,6 +2,7 @@ const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, JWT_EXPIRES } = require('../config/env');
 const UserModel = require('../models/userModel');
+const realtime = require('../realtime/socket');
 
 let dummyHash; // para igualar tiempos cuando el correo no existe
 const token = (id) => jwt.sign({ sub: id }, JWT_SECRET, { algorithm: 'HS256', expiresIn: JWT_EXPIRES });
@@ -12,6 +13,7 @@ exports.register = async (req, res) => {
   const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
   const id = await UserModel.create({ name, email, passwordHash, age, monthly_income, monthly_budget });
   const user = await UserModel.findById(id);
+  realtime.userRegistered(user); // tiempo real: avisa a los admins
   res.status(201).json({ token: token(id), user });
 };
 

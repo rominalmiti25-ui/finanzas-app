@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../services/realtime_service.dart';
 
 final NumberFormat _money = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 String money(num v) => _money.format(v);
@@ -148,5 +150,25 @@ class DualLineChart extends StatelessWidget {
         Icon(Icons.circle, size: 10, color: Colors.green.shade600), Text(' $nameB', style: const TextStyle(fontSize: 12)),
       ]),
     ]);
+  }
+}
+
+/// Indicador de conexión de tiempo real para la barra superior.
+class LiveBadge extends StatelessWidget {
+  const LiveBadge({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final rt = context.read<RealtimeService>();
+    return ValueListenableBuilder<bool>(
+      valueListenable: rt.connected,
+      builder: (_, on, __) => Padding(
+        padding: const EdgeInsets.only(right: 4),
+        child: Chip(
+          avatar: Icon(Icons.circle, size: 12, color: on ? Colors.green : Colors.grey),
+          label: Text(on ? 'En vivo' : 'Sin conexión', style: const TextStyle(fontSize: 12)),
+          visualDensity: VisualDensity.compact,
+        ),
+      ),
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/admin_viewmodel.dart';
 import 'widgets/common.dart';
@@ -21,6 +22,26 @@ class AdminDashboardTab extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () => vm.loadStats(),
       child: ListView(padding: const EdgeInsets.all(16), children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Row(children: [Icon(Icons.bolt, color: Colors.orange), SizedBox(width: 6), Text('Actividad en vivo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16))]),
+              const SizedBox(height: 6),
+              if (vm.feed.isEmpty) const Text('Esperando actividad de los clientes…', style: TextStyle(color: Colors.black54)),
+              for (final a in vm.feed.take(8))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(DateFormat('HH:mm:ss').format(a.at.toLocal()), style: const TextStyle(fontSize: 11, color: Colors.black45)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(a.text, style: const TextStyle(fontSize: 13))),
+                  ]),
+                ),
+            ]),
+          ),
+        ),
+        const SizedBox(height: 8),
         GridView.count(
           crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.7,

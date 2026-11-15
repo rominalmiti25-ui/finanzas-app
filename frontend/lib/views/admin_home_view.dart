@@ -4,6 +4,7 @@ import '../viewmodels/admin_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'admin_dashboard_tab.dart';
 import 'admin_users_tab.dart';
+import 'widgets/common.dart';
 
 class AdminHomeView extends StatefulWidget {
   const AdminHomeView({super.key});
@@ -30,7 +31,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_index == 0 ? 'Panel de administración' : 'Usuarios'),
-        actions: [IconButton(tooltip: 'Cerrar sesión', icon: const Icon(Icons.logout), onPressed: () => context.read<AuthViewModel>().logout())],
+        actions: [const LiveBadge(), IconButton(tooltip: 'Cerrar sesión', icon: const Icon(Icons.logout), onPressed: () => context.read<AuthViewModel>().logout())],
       ),
       body: IndexedStack(index: _index, children: [const AdminDashboardTab(), AdminUsersTab(currentUserId: user.id)]),
       bottomNavigationBar: NavigationBar(

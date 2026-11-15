@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/api_client.dart';
+import 'services/realtime_service.dart';
 import 'viewmodels/admin_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/prediction_viewmodel.dart';
@@ -10,6 +11,7 @@ import 'views/client_home_view.dart';
 import 'views/login_view.dart';
 
 final ApiClient _api = ApiClient();
+final RealtimeService _rt = RealtimeService();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,10 +25,11 @@ class FinanzasApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel(_api)..restore()),
-        ChangeNotifierProvider(create: (_) => TransactionsViewModel(_api)),
-        ChangeNotifierProvider(create: (_) => PredictionViewModel(_api)),
-        ChangeNotifierProvider(create: (_) => AdminViewModel(_api)),
+        Provider<RealtimeService>.value(value: _rt),
+        ChangeNotifierProvider(create: (_) => AuthViewModel(_api, _rt)..restore()),
+        ChangeNotifierProvider(create: (_) => TransactionsViewModel(_api, _rt)),
+        ChangeNotifierProvider(create: (_) => PredictionViewModel(_api, _rt)),
+        ChangeNotifierProvider(create: (_) => AdminViewModel(_api, _rt)),
       ],
       child: MaterialApp(
         title: 'Finanzas Personales',

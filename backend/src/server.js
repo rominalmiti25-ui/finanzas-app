@@ -1,8 +1,13 @@
 const { PORT } = require('./config/env');
+const http = require('http');
 const app = require('./app');
+const realtime = require('./realtime/socket');
 const MlService = require('./services/mlService');
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+realtime.init(server); // Socket.IO comparte el mismo puerto que la API
+
+server.listen(PORT, () => {
   console.log(`API escuchando en el puerto ${PORT}`);
   // Si aún no hay modelos entrenados y hay datos suficientes, entrena en segundo plano
   MlService.getMetrics().then(async (m) => {
